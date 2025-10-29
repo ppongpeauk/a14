@@ -82,7 +82,7 @@ def mel_to_wav_vocoder(
     # Griffin-Lim on linear magnitude
     griffin = torchaudio.transforms.GriffinLim(
         n_fft=cfg.n_fft, hop_length=cfg.hop_length, n_iter=n_iter
-    )
+    ).to(device=mags.device, dtype=mags.dtype)
     wavs = []
     for i in range(b):
         wav = griffin(mags[i])
