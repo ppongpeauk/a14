@@ -76,6 +76,8 @@ aud2studio-infer \
   --config examples/config.yaml
 ```
 
+aud2studio-infer --inputs ./data/end_1.mp3 --save out.wav --config examples/config.yaml
+
 ## Repo map
 ```
 aud2studio/

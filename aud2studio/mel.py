@@ -43,20 +43,31 @@ def _mel_to_mag(mel_spec: torch.Tensor, cfg: MelCfg, sr: int = 48000) -> torch.T
     mel_spec: [B, M, N] (linear magnitude, not log)
     returns: [B, F, N]
     """
-    mel_fb = torchaudio.functional.create_fb_matrix(
-        n_freqs=cfg.n_fft // 2 + 1,
-        f_min=cfg.fmin,
-        f_max=cfg.fmax,
-        n_mels=cfg.n_mels,
-        sample_rate=sr,
-        norm=None,
-        mel_scale="htk",
-    ).to(
-        mel_spec.device, mel_spec.dtype
-    )  # [F, M]
-    # Pseudo-inverse
-    pinv = torch.linalg.pinv(mel_fb)
-    return torch.matmul(pinv, mel_spec)  # [F, N]
+    n_freqs = cfg.n_fft // 2 + 1
+    f_max = min(cfg.fmax, sr / 2.0)
+    try:
+        fbanks = torchaudio.functional.melscale_fbanks(
+            n_freqs=n_freqs,
+            f_min=cfg.fmin,
+            f_max=f_max,
+            n_mels=cfg.n_mels,
+            sample_rate=sr,
+            norm=None,
+            mel_scale="htk",
+        )  # [F, M]
+    except AttributeError:
+        fbanks = torchaudio.functional.create_fb_matrix(
+            n_freqs=n_freqs,
+            f_min=cfg.fmin,
+            f_max=f_max,
+            n_mels=cfg.n_mels,
+            sample_rate=sr,
+            norm=None,
+            mel_scale="htk",
+        )  # [F, M]
+    mel_fb = fbanks.to(mel_spec.device, mel_spec.dtype).T  # [M, F]
+    pinv = torch.linalg.pinv(mel_fb)  # [F, M]
+    return pinv @ mel_spec  # [F, N]
 
 
 def mel_to_wav_vocoder(
