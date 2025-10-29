@@ -77,8 +77,14 @@ def mel_to_wav_vocoder(
     Invert log-mel [B, 1, M, N] to waveform [B, T] using Griffin-Lim as a fallback vocoder.
     """
     b = log_mel.size(0)
-    mel = torch.exp(log_mel.squeeze(1))  # [B, M, N]
-    mags = torch.stack([_mel_to_mag(mel[i], cfg, sr) for i in range(b)], dim=0)
+    # our mel features are power (because power=2.0 in wav_to_mel)
+    mel_power = torch.exp(log_mel.squeeze(1))  # [B, M, N]
+    mags_power = torch.stack(
+        [_mel_to_mag(mel_power[i], cfg, sr) for i in range(b)], dim=0
+    )  # [B, F, N], still power
+    mags = torch.sqrt(
+        torch.clamp(mags_power, min=1e-8)
+    )  # convert to magnitude for Griffin-Lim
     # Griffin-Lim on linear magnitude
     griffin = torchaudio.transforms.GriffinLim(
         n_fft=cfg.n_fft, hop_length=cfg.hop_length, n_iter=n_iter
