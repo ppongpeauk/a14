@@ -30,7 +30,7 @@ def wav_to_mel(wav: torch.Tensor, cfg: MelCfg) -> torch.Tensor:
         power=2.0,
         norm=None,
         mel_scale="htk",
-    )(
+    ).to(wav.device)(
         wav
     )  # [B, M, N]
     logmel = torch.log(spec + 1e-6)
