@@ -1,0 +1,40 @@
+experiment: bootleg_v1
+seed: 1337
+audio:
+  sample_rate: 48000
+  clip_seconds: 10
+  mono: true
+mel:
+  n_fft: 1024
+  hop_length: 256
+  n_mels: 128
+  fmin: 20
+  fmax: 20000
+model:
+  base_channels: 64
+  layers: 3
+  attention_resolutions: [16, 8, 4]
+  conditioning_dim: 256
+scheduler:
+  name: ddpm
+  num_inference_steps: 25
+train:
+  batch_size: 2
+  lr: 2.0e-4
+  ema: false
+  grad_clip: 1.0
+  epochs: 1
+  optimizer: adamw
+  fp16: false
+data:
+  rir_dir: ./data/rirs
+  noise_dir: ./data/noise
+  clean_music_dir: ./data/clean
+  pairs_manifest: ./data/pairs.jsonl
+eval:
+  metrics: [si_sdr]
+  val_every_steps: 1000
+export:
+  half_precision: true
+
+

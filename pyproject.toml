@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aud2studio"
+version = "0.1.0"
+description = "Audience-to-Studio Audio Diffusion: denoise, dereverb, de-room audience recordings"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [
+  { name = "aud2studio maintainers", email = "maintainers@example.com" }
+]
+dependencies = [
+  "torch>=2.2",
+  "torchaudio>=2.2",
+  "diffusers>=0.29.0",
+  "accelerate>=0.33.0",
+  "transformers>=4.43.0",
+  "pydantic>=2.7.0",
+  "pyyaml>=6.0.1",
+  "tqdm>=4.66.0",
+  "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+metrics = [
+  "torchmetrics-audio>=0.5.0; python_version>='3.9'",
+  "srmrpy>=2.0.1; python_version>='3.9'",
+]
+
+[project.urls]
+Homepage = "https://example.com/aud2studio"
+
+[project.scripts]
+aud2studio-infer = "aud2studio.infer:main"
+aud2studio-train = "aud2studio.trainer:main"
+
+[tool.hatch.build]
+include = [
+  "aud2studio/**",
+  "scripts/**",
+  "README.md",
+]
+
+
