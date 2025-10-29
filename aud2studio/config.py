@@ -49,7 +49,7 @@ class TrainCfg(BaseModel):
     fp16: bool = True
     output_dir: str = "./runs"
     save_every_steps: int = 1000
-    save_total_limit: int | None = 5
+    save_total_limit: int = 5
 
 
 class DataCfg(BaseModel):
