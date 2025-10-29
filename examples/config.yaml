@@ -31,6 +31,10 @@ data:
   noise_dir: ./data/noise
   clean_music_dir: ./data/clean
   pairs_manifest: ./data/pairs.jsonl
+  # Enable segmentation for training
+  segment_seconds: 10
+  hop_seconds: 10  # set < segment_seconds for overlap
+  drop_last_short: false
 eval:
   metrics: [si_sdr]
   val_every_steps: 1000

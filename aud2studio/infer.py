@@ -39,15 +39,16 @@ def sample_with_scheduler(
 
 def run(inputs: List[str], out_path: str, cfg: RootCfg) -> None:
     sr = cfg.audio.sample_rate
-    target_len = int(cfg.audio.clip_seconds * sr)
-    waves = [pad_or_trim(rms_normalize(load_audio(p, sr)), target_len) for p in inputs]
+    raw = [rms_normalize(load_audio(p, sr)) for p in inputs]
+    max_len = max(w.numel() for w in raw)
+    waves = [pad_or_trim(w, max_len) for w in raw]
     mix = torch.stack(waves, dim=0).mean(dim=0).unsqueeze(0)  # [1, T]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     unet = build_unet(cfg.model, cfg.mel).to(device).eval()
     cond_enc = AcousticEncoder(dim=cfg.model.conditioning_dim).to(device).eval()
 
-    mel_in = wav_to_mel(mix.to(device), cfg.mel)
+    mel_in = wav_to_mel(mix.to(device), cfg.mel, sr)
     cond = cond_enc(mel_in)  # [1, 1, C]
 
     # sample log-mel

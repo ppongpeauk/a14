@@ -13,14 +13,14 @@ import torchaudio
 from .config import MelCfg
 
 
-def wav_to_mel(wav: torch.Tensor, cfg: MelCfg) -> torch.Tensor:
+def wav_to_mel(wav: torch.Tensor, cfg: MelCfg, sr: int = 48000) -> torch.Tensor:
     """
     Convert mono waveform tensor [B, T] or [T] to log-mel [B, 1, M, N].
     """
     if wav.dim() == 1:
         wav = wav.unsqueeze(0)
     spec = torchaudio.transforms.MelSpectrogram(
-        sample_rate=48000,  # caller must ensure resample beforehand
+        sample_rate=sr,  # caller must ensure resample beforehand
         n_fft=cfg.n_fft,
         hop_length=cfg.hop_length,
         n_mels=cfg.n_mels,

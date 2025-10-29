@@ -57,6 +57,12 @@ class DataCfg(BaseModel):
     noise_dir: str = "./data/noise"
     clean_music_dir: str = "./data/clean"
     pairs_manifest: str = "./data/pairs.jsonl"
+    # Segmentation (training): if set, dataset emits multiple segments per file
+    segment_seconds: Optional[float] = None
+    hop_seconds: Optional[float] = None  # default = segment_seconds (non-overlapping)
+    drop_last_short: bool = (
+        False  # if False, tail is padded; if True, tail < segment is dropped
+    )
 
 
 class EvalCfg(BaseModel):

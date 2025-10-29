@@ -103,8 +103,8 @@ def train(cfg: RootCfg) -> None:
             wav_in = batch["aud"].to(accel.device)
             wav_tgt = batch["ref"].to(accel.device)
 
-            mel_in = wav_to_mel(wav_in, cfg.mel)  # [B, 1, M, N]
-            mel_tgt = wav_to_mel(wav_tgt, cfg.mel)
+            mel_in = wav_to_mel(wav_in, cfg.mel, cfg.audio.sample_rate)  # [B, 1, M, N]
+            mel_tgt = wav_to_mel(wav_tgt, cfg.mel, cfg.audio.sample_rate)
 
             cond = cond_enc(mel_in)  # [B, 1, C]
 
