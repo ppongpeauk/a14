@@ -8,6 +8,12 @@ Small, readable PyTorch + Diffusers project that turns audience recordings into 
 pip install -e .
 ```
 
+If you hit a SciPy/NumPy ABI error on HPC (e.g., "numpy.dtype size changed"), use constraints:
+
+```bash
+pip install -e . -c constraints/py39.txt
+```
+
 ## Your data layout (one-folder pairs)
 You said all pairs live in a single folder, with files like:
 - `input0_0.wav` → ground truth (the suffix `_0` is the reference)
