@@ -25,6 +25,9 @@ class MelCfg(BaseModel):
     n_mels: int = 128
     fmin: int = 20
     fmax: int = 20000
+    # Vocoder / inversion controls
+    gl_iters: int = 64
+    invert_method: str = "auto"  # auto | inverse_mel_scale | pinv
 
 
 class ModelCfg(BaseModel):
