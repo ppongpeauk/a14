@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import torch
 from accelerate import Accelerator
 from diffusers import DDPMScheduler
+from tqdm.auto import tqdm
 
 from .config import RootCfg
 from .data import PairDataset, collate_audio
@@ -50,7 +51,12 @@ def train(cfg: RootCfg) -> None:
     ts = TrainState()
 
     for epoch in range(cfg.train.epochs):
-        for batch in dl:
+        pbar = tqdm(
+            dl,
+            disable=not accel.is_local_main_process,
+            desc=f"epoch {epoch + 1}/{cfg.train.epochs}",
+        )
+        for batch in pbar:
             wav_in = batch["aud"].to(accel.device)
             wav_tgt = batch["ref"].to(accel.device)
 
@@ -77,8 +83,8 @@ def train(cfg: RootCfg) -> None:
             opt.zero_grad(set_to_none=True)
 
             ts.step += 1
-            if accel.is_local_main_process and ts.step % 50 == 0:
-                print(f"step {ts.step} loss {loss.item():.4f}")
+            if accel.is_local_main_process:
+                pbar.set_postfix(loss=f"{loss.item():.4f}", step=ts.step)
 
 
 def main() -> None:

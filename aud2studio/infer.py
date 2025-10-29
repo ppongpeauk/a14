@@ -11,6 +11,7 @@ from typing import List
 
 import torch
 from diffusers import DDPMScheduler
+from tqdm.auto import tqdm
 
 from .config import RootCfg
 from .mel import wav_to_mel, mel_to_wav_vocoder
@@ -30,7 +31,7 @@ def sample_with_scheduler(
     scheduler = DDPMScheduler(num_train_timesteps=1000)
     scheduler.set_timesteps(cfg.scheduler.num_inference_steps)
     x = torch.randn(shape, device=cond.device)
-    for t in scheduler.timesteps:
+    for t in tqdm(scheduler.timesteps, desc="DDPM sampling"):
         noise_pred = unet(x, t, encoder_hidden_states=cond).sample
         x = scheduler.step(noise_pred, t, x).prev_sample
     return x
