@@ -14,6 +14,24 @@ If you hit a SciPy/NumPy ABI error on HPC (e.g., "numpy.dtype size changed"), us
 pip install -e . -c constraints/py39.txt
 ```
 
+If you see ImportError: cannot import name 'cached_download' from 'huggingface_hub', pin hub to 0.19.4:
+
+```bash
+pip install --upgrade --force-reinstall huggingface_hub==0.19.4
+```
+
+### Latest stack (recommended)
+- For the newest `diffusers`/`transformers`/`huggingface_hub`, use Python 3.10+ to avoid SciPy/NumPy wheel gaps on 3.9.
+
+Fresh env with latest libs:
+```bash
+python3.10 -m venv .venv && source .venv/bin/activate
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+# Ensure the newest bits
+python -m pip install -U diffusers transformers huggingface_hub accelerate
+```
+
 ## Your data layout (one-folder pairs)
 You said all pairs live in a single folder, with files like:
 - `input0_0.wav` → ground truth (the suffix `_0` is the reference)
