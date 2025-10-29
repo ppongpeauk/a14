@@ -47,6 +47,9 @@ class TrainCfg(BaseModel):
     epochs: int = 100
     optimizer: str = "adamw"
     fp16: bool = True
+    output_dir: str = "./runs"
+    save_every_steps: int = 1000
+    save_total_limit: int | None = 5
 
 
 class DataCfg(BaseModel):

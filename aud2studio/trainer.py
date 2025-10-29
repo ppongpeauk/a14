@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from pathlib import Path
+import shutil
 
 import torch
 from accelerate import Accelerator
@@ -24,6 +26,44 @@ from .utils import set_seed
 @dataclass
 class TrainState:
     step: int = 0
+
+
+def _prune_checkpoints(root: Path, keep: int | None) -> None:
+    if keep is None or keep <= 0:
+        return
+    ckpts = sorted(
+        [p for p in root.glob("step-*") if p.is_dir()],
+        key=lambda p: int(p.name.split("-")[-1]),
+    )
+    for old in ckpts[:-keep]:
+        shutil.rmtree(old, ignore_errors=True)
+
+
+def save_checkpoint(
+    accel: Accelerator,
+    *,
+    step: int,
+    epoch: int,
+    unet,
+    cond_enc,
+    opt,
+    cfg: RootCfg,
+    out_dir: Path,
+) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ckpt_dir = out_dir / f"step-{step}"
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    state = {
+        "step": step,
+        "epoch": epoch,
+        "config": cfg.to_dict(),
+        "unet": accel.unwrap_model(unet).state_dict(),
+        "cond": accel.unwrap_model(cond_enc).state_dict(),
+        "optimizer": opt.state_dict(),
+    }
+    accel.save(state, ckpt_dir / "checkpoint.pt")
+    # prune
+    _prune_checkpoints(out_dir, cfg.train.save_total_limit)
 
 
 def train(cfg: RootCfg) -> None:
@@ -49,6 +89,9 @@ def train(cfg: RootCfg) -> None:
     unet.train()
     cond_enc.train()
     ts = TrainState()
+
+    # checkpoint root: <output_dir>/<experiment>
+    ckpt_root = Path(cfg.train.output_dir) / cfg.experiment
 
     for epoch in range(cfg.train.epochs):
         pbar = tqdm(
@@ -85,6 +128,35 @@ def train(cfg: RootCfg) -> None:
             ts.step += 1
             if accel.is_local_main_process:
                 pbar.set_postfix(loss=f"{loss.item():.4f}", step=ts.step)
+            # periodic checkpoint
+            if (
+                accel.is_local_main_process
+                and cfg.train.save_every_steps > 0
+                and ts.step % cfg.train.save_every_steps == 0
+            ):
+                save_checkpoint(
+                    accel,
+                    step=ts.step,
+                    epoch=epoch,
+                    unet=unet,
+                    cond_enc=cond_enc,
+                    opt=opt,
+                    cfg=cfg,
+                    out_dir=ckpt_root,
+                )
+
+    # final checkpoint
+    if accel.is_local_main_process:
+        save_checkpoint(
+            accel,
+            step=ts.step,
+            epoch=cfg.train.epochs - 1,
+            unet=unet,
+            cond_enc=cond_enc,
+            opt=opt,
+            cfg=cfg,
+            out_dir=ckpt_root,
+        )
 
 
 def main() -> None:
